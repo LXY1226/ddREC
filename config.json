@@ -1,0 +1,15 @@
+{
+	"App": {
+		"Listen": "",
+		"Username": "",
+		"Password": ""
+	},
+	"Default": {
+		"Enabled": false,
+		"FreshInterval": 0,
+		"FreshLiveInterval": 0
+	},
+	"Rooms": {
+		"55511": {}
+	}
+}
