@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"compress/zlib"
 	"context"
+	"ddREC/tools"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/andybalholm/brotli"
 	"io"
 	"log"
 	"net"
@@ -67,7 +69,12 @@ reParse:
 		}
 		goto reParse
 	case ProtocolBrotli:
-		panic("br is not implemented")
+		zr := brotli.NewReader(bytes.NewReader(data[12:]))
+		r.rdBuf, err = io.ReadAll(zr)
+		if err != nil {
+			return 0, 0, nil, err
+		}
+		goto reParse
 	}
 	act = binary.BigEndian.Uint32(data[4:])
 	data = data[12:]
@@ -200,7 +207,7 @@ start:
 		0x00, 0x10,
 		0x00, 0x01,
 		0x00, 0x00, 0x00, 0x07})*/
-	r.rawBuf = append(r.rawBuf, `{"uid":0,"protover":0,"platform":"web","clientver":"2.6.25","type":2,"key":`...)
+	r.rawBuf = append(r.rawBuf, `{"uid":0,"protover":3,"platform":"web","clientver":"2.6.25","type":2,"key":`...)
 	r.rawBuf = append(r.rawBuf, info.Token...)
 	r.rawBuf = append(r.rawBuf, `,"roomid":`...)
 	r.rawBuf = append(r.rawBuf, r.RoomID...)
@@ -241,15 +248,18 @@ start:
 				if err == nil {
 					fmt.Printf("%x %s\n", act, string(data))
 					if len(data) > 8 {
-						fmt.Printf("%x\n", binary.LittleEndian.Uint32(data[8:]))
-						switch binary.LittleEndian.Uint32(data[8:]) {
-						case binary.LittleEndian.Uint32([]byte("LIVE")):
-							println("LIVE!")
-							r.isLive = true
-							r.Record()
-						case binary.LittleEndian.Uint32([]byte("PREP")):
-							println("STOP!")
-							r.isLive = false
+						switch tools.BytesToU32(data[8:]) {
+						case tools.StringToU32("LIVE"):
+							if data[14] == '"' {
+								println("LIVE!")
+								r.isLive = true
+								go r.Record()
+							}
+						case tools.StringToU32("PREP"):
+							if string(data[7:18]) == `"PREPARING"` {
+								println("STOP!")
+								r.isLive = false
+							}
 						}
 					}
 				}

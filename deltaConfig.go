@@ -8,6 +8,7 @@ type Config struct {
 	App     ConfigApp                  `json:"App"`
 	Default RoomConfig                 `json:"Default"`
 	Rooms   map[string]json.RawMessage `json:"Rooms"`
+	rooms   map[string]*Room
 }
 
 type ConfigApp struct {
@@ -23,7 +24,6 @@ type RoomConfig struct {
 }
 
 var globalConfig Config
-var globalRooms map[string]*Room
 
 func (c *Config) Reset() {
 	c.App.Listen = ":8080"
@@ -34,6 +34,7 @@ func (c *Config) Reset() {
 
 func (c *Config) Load(data []byte) error {
 	c.Rooms = make(map[string]json.RawMessage)
+	c.rooms = make(map[string]*Room)
 	return json.Unmarshal(data, c)
 }
 

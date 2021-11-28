@@ -56,7 +56,10 @@ start:
 	err = json.Unmarshal(data, &biliResp)
 	if err != nil {
 		log.Println("解析API出错：", err)
-		goto retry
+		if resp.StatusCode == 429 {
+			goto retry
+		}
+		return nil
 	}
 	if biliResp.Code != 0 {
 		log.Panicln("API返回了错误：", biliResp.Message)

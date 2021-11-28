@@ -22,7 +22,8 @@ func main() {
 	for name, room := range globalConfig.Rooms {
 		r := new(Room)
 		r.Init(name, room)
-		r.Connect()
-
+		go r.Connect()
+		globalConfig.rooms[name] = r
 	}
+	select {}
 }
